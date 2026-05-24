@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Memora Admin | Control de Gastos
+    </title>
+
+    <link rel="stylesheet" href="styles.css">
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- CHART JS -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</head>
+
+<body>
+
+    <div class="app-container">
+
+        <!-- =====================================================
+             SIDEBAR
+        ====================================================== -->
+        <aside class="sidebar">
+
+            <div class="logo">
+
+                <span>
+                    Panel Admin
+                </span>
+
+            </div>
+
+            <nav class="menu">
+
+                <button
+                    class="menu-item active"
+                    onclick="switchTab('dashboard')"
+                >
+
+                    <i data-lucide="layout-dashboard"></i>
+
+                    Dashboard
+
+                </button>
+
+                <button
+                    class="menu-item"
+                    onclick="switchTab('users')"
+                >
+
+                    <i data-lucide="users"></i>
+
+                    Usuarios
+
+                </button>
+
+                <button
+                    class="menu-item"
+                    onclick="switchTab('categories')"
+                >
+
+                    <i data-lucide="tags"></i>
+
+                    Categorías
+
+                </button>
+
+                <!-- ANALYTICS -->
+                <button
+                    class="menu-item"
+                    onclick="switchTab('analytics')"
+                >
+
+                    <i data-lucide="pie-chart"></i>
+
+                    Analíticas
+
+                </button>
+
+            </nav>
+
+            <div class="api-badge">
+
+                <div
+                    id="status-dot"
+                    class="dot offline"
+                ></div>
+
+                <span id="status-text">
+                    Backend Offline
+                </span>
+
+            </div>
+
+        </aside>
+
+        <!-- =====================================================
+             MAIN CONTENT
+        ====================================================== -->
+        <main class="main-content">
+
+            <!-- TOP BAR -->
+            <header class="top-bar">
+
+               
+
+            </header>
+
+            <!-- =====================================================
+                 DASHBOARD
+            ====================================================== -->
+            <section
+                id="dashboard-section"
+                class="content-section"
+            >
+
+                <div class="stats-grid">
+
+                    <!-- USERS -->
+                    <div class="stat-card glass">
+
+                        <div class="stat-icon purple">
+
+                            <i data-lucide="users"></i>
+
+                        </div>
+
+                        <div class="stat-data">
+
+                            <span class="label">
+                                Usuarios
+                            </span>
+
+                            <span
+                                class="value"
+                                id="stat-total-users"
+                            >
+                                0
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                    <!-- INCOME -->
+                    <div class="stat-card glass">
+
+                        <div class="stat-icon green">
+
+                            <i data-lucide="trending-up"></i>
+
+                        </div>
+
+                        <div class="stat-data">
+
+                            <span class="label">
+                                Total Ingresos
+                            </span>
+
+                            <span
+                                class="value"
+                                id="stat-total-income"
+                            >
+                                $0.00
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                    <!-- EXPENSES -->
+                    <div class="stat-card glass">
+
+                        <div class="stat-icon orange">
+
+                            <i data-lucide="trending-down"></i>
+
+                        </div>
+
+                        <div class="stat-data">
+
+                            <span class="label">
+                                Total Gastos
+                            </span>
+
+                            <span
+                                class="value"
+                                id="stat-total-expenses"
+                            >
+                                $0.00
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- USERS TABLE -->
+                <div class="recent-activity glass">
+
+                    <div class="table-header">
+
+                        <h2>
+                            Listado de Usuarios
+                        </h2>
+
+                    </div>
+
+                    <div class="table-container">
+
+                        <table>
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>Nombre</th>
+
+                                    <th>Correo</th>
+
+                                    <th>ID</th>
+
+                                    <th>Acciones</th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody id="user-table-body">
+
+                                <!-- JS -->
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- =====================================================
+                 CATEGORIES
+            ====================================================== -->
+            <section
+                id="categories-section"
+                class="content-section"
+                style="display:none;"
+            >
+
+                <div
+                    class="categories-grid"
+                    id="categories-container"
+                >
+
+                    <!-- JS -->
+
+                </div>
+
+            </section>
+
+            <!-- =====================================================
+                 ANALYTICS
+            ====================================================== -->
+            <section
+                id="analytics-section"
+                class="content-section"
+                style="display:none;"
+            >
+
+                <div style="
+                    display:grid;
+                    grid-template-columns: 1.2fr 0.8fr;
+                    gap:24px;
+                    align-items:start;
+                ">
+
+                    <!-- CHART -->
+                    <div class="glass">
+
+                        <h2 style="
+                            margin-bottom:20px;
+                        ">
+                            📊 Distribución de categorías
+                        </h2>
+
+                        <canvas id="analyticsChart"></canvas>
+
+                    </div>
+
+                    <!-- RANKING -->
+                    <div class="glass">
+
+                        <h2 style="
+                            margin-bottom:20px;
+                        ">
+                            🏆 Categorías más usadas
+                        </h2>
+
+                        <div id="analytics-ranking"></div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <!-- =====================================================
+         DRAWER
+    ====================================================== -->
+    <div
+        id="drawer-overlay"
+        class="drawer-overlay"
+        onclick="closeDrawer()"
+    ></div>
+
+    <div
+        id="user-drawer"
+        class="drawer"
+    >
+
+        <div
+            class="drawer-content"
+            id="drawer-body"
+        >
+
+            <!-- JS -->
+
+        </div>
+
+    </div>
+
+    <!-- =====================================================
+         SCRIPTS
+    ====================================================== -->
+    <script src="script.js"></script>
+
+    <script>
+        lucide.createIcons();
+    </script>
+
+</body>
+</html>
