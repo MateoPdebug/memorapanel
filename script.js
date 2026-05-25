@@ -1,4 +1,4 @@
-const API_BASE_URL = "https://backendmemora.onrender.com";
+const API_BASE_URL = "http://192.168.1.5:8000";
 
 let dataStore = {
     users: [],
@@ -27,6 +27,18 @@ async function loadAllData() {
         );
 
         dataStore.stats = await statsRes.json();
+
+        // ALL CATEGORIES
+        const cRes = await fetch(
+        `${API_BASE_URL}/all-categories`
+        );
+
+        dataStore.categories = await cRes.json();
+
+        console.log(
+        "Categorias:",
+        dataStore.categories
+        );
 
         console.log("Usuarios:", dataStore.users);
 
@@ -145,12 +157,12 @@ async function renderCategories() {
     );
 
     if (!container) return;
-/*
-    // MOTHER CATEGORIES
+
+   // MOTHER CATEGORIES
     const motherRes = await fetch(
         `${API_BASE_URL}/mother-categories`
     );
-*/
+
     const motherCategories = await motherRes.json();
 
     if (
@@ -282,9 +294,25 @@ function openDrawer(userId) {
                 border:1px solid rgba(255,255,255,0.06);
                 border-radius:10px;
                 margin-bottom:10px;
+                display:flex;
+                justify-content:space-between;
+                align-items:center;
             ">
 
-                📁 ${cat.nombre}
+                <div>
+                    📁 ${cat.nombre}
+                </div>
+
+                <button
+                    class="btn-view"
+                    style="
+                        padding:6px 12px;
+                        font-size:0.85rem;
+                    "
+                    onclick="goToCategory('${cat.id}')"
+                >
+                    Clasificar
+                </button>
 
             </div>
 
@@ -665,6 +693,43 @@ function closeDrawer() {
         .classList.remove('open');
 }
 
+function goToCategory(categoryId) {
+
+    closeDrawer();
+
+    switchTab('categories');
+
+    setTimeout(() => {
+
+        const select = document.getElementById(
+            `select-${categoryId}`
+        );
+
+        if (!select) return;
+
+        const card = select.closest('.glass');
+
+        if (!card) return;
+
+        card.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+        });
+
+        card.style.transition = '0.4s';
+
+        card.style.boxShadow =
+            '0 0 25px rgba(99,102,241,0.9)';
+
+        setTimeout(() => {
+
+            card.style.boxShadow = '';
+
+        }, 3000);
+
+    }, 500);
+}
+
 // 
 function switchTab(tab) {
 
@@ -688,6 +753,12 @@ function switchTab(tab) {
     if (tab === 'analytics') {
 
         renderAnalytics();
+    }
+
+    // CATEGORIES
+    if (tab === 'categories') {
+
+        renderCategories();
     }
 }
 
