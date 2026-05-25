@@ -1,4 +1,4 @@
-const API_BASE_URL = "https://backendmemora.onrender.com";
+const API_BASE_URL = "http://192.168.1.5:8000";
 
 let dataStore = {
     users: [],
@@ -14,23 +14,29 @@ async function loadAllData() {
 
         console.log("Conectando...");
 
+        const ts = Date.now();
+        const opts = { cache: 'no-store' };
+
         // USERS
         const uRes = await fetch(
-            `${API_BASE_URL}/admin/users`
+            `${API_BASE_URL}/admin/users?_=${ts}`,
+            opts
         );
 
         dataStore.users = await uRes.json();
 
         // STATS
         const statsRes = await fetch(
-            `${API_BASE_URL}/admin/stats`
+            `${API_BASE_URL}/admin/stats?_=${ts}`,
+            opts
         );
 
         dataStore.stats = await statsRes.json();
 
         // ALL CATEGORIES
         const cRes = await fetch(
-        `${API_BASE_URL}/all-categories`
+            `${API_BASE_URL}/all-categories?_=${ts}`,
+            opts
         );
 
         dataStore.categories = await cRes.json();
@@ -160,7 +166,8 @@ async function renderCategories() {
 
    // MOTHER CATEGORIES
     const motherRes = await fetch(
-        `${API_BASE_URL}/mother-categories`
+        `${API_BASE_URL}/mother-categories?_=${Date.now()}`,
+        { cache: 'no-store' }
     );
 
     const motherCategories = await motherRes.json();
@@ -533,8 +540,13 @@ async function renderAnalytics() {
     try {
 
         const response = await fetch(
-            `${API_BASE_URL}/analytics/category-distribution`
+            `${API_BASE_URL}/analytics/category-distribution?_=${Date.now()}`,
+            { cache: 'no-store' }
         );
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
 
         const analytics = await response.json();
 
@@ -700,24 +712,39 @@ async function reclassifyCategory(categoryId) {
 
     try {
 
-        await fetch(
+        const response = await fetch(
 
             `${API_BASE_URL}/reclassify-category/${categoryId}?mother_category_id=${motherCategoryId}`,
 
             {
-                method: 'PUT'
+                method: 'PUT',
+                cache: 'no-store',
             }
         );
 
-        alert("Categoría actualizada 😎🔥");
+        if (!response.ok) {
+            const errBody = await response.text();
+            console.error("Backend respondió error:", response.status, errBody);
+            throw new Error(`HTTP ${response.status}: ${errBody}`);
+        }
 
-        loadAllData();
+        const updated = await response.json();
+        console.log("Categoría actualizada en backend:", updated);
+
+        alert("Categoría actualizada");
+
+        await loadAllData();
+
+        const analyticsSection = document.getElementById('analytics-section');
+        if (analyticsSection && analyticsSection.style.display !== 'none') {
+            await renderAnalytics();
+        }
 
     } catch (error) {
 
         console.error(error);
 
-        alert("Error actualizando categoría");
+        alert(`Error actualizando categoría: ${error.message}`);
     }
 }
 
