@@ -1,4 +1,4 @@
-const API_BASE_URL = "https://backendmemora.onrender.com";
+const API_BASE_URL = "http://192.168.1.5:8000";
 
 let dataStore = {
     users: [],
@@ -538,61 +538,98 @@ async function renderAnalytics() {
 
         const analytics = await response.json();
 
-        const labels = analytics.map(
-            item => item.category
+        const items = analytics.filter(a => a.total > 0);
+
+        const grandTotal = items.reduce(
+            (sum, a) => sum + a.total,
+            0
         );
 
-        const data = analytics.map(
-            item => item.total
-        );
+        const itemsWithPct = items
+            .map(a => ({
+                nombre: a.nombre,
+                total: a.total,
+                percentage: grandTotal > 0
+                    ? +(a.total / grandTotal * 100).toFixed(1)
+                    : 0,
+            }))
+            .sort((a, b) => b.total - a.total);
+
+        const labels = itemsWithPct.map(i => i.nombre);
+        const data = itemsWithPct.map(i => i.total);
+
+        const palette = [
+            '#7F5AF0',
+            '#10B981',
+            '#F59E0B',
+            '#EF4444',
+            '#6366F1',
+            '#06B6D4',
+            '#EC4899',
+        ];
 
         const ranking = document.getElementById(
             'analytics-ranking'
         );
 
-        ranking.innerHTML = analytics.map((item, index) => `
-
-            <div style="
-                display:flex;
-                justify-content:space-between;
-                align-items:center;
-                padding:14px 0;
-                border-bottom:1px solid rgba(255,255,255,0.06);
-            ">
-
-                <div>
-
-                    <strong>
-                        #${index + 1}
-                    </strong>
-
-                    ${item.category}
-
-                </div>
+        if (itemsWithPct.length === 0) {
+            ranking.innerHTML = `
+                <p style="color:var(--text-dim);">
+                    No hay gastos clasificados todavía.
+                </p>
+            `;
+        } else {
+            ranking.innerHTML = itemsWithPct.map((item, index) => `
 
                 <div style="
-                    color:#818cf8;
-                    font-weight:600;
+                    display:flex;
+                    justify-content:space-between;
+                    align-items:center;
+                    padding:14px 0;
+                    border-bottom:1px solid rgba(255,255,255,0.06);
                 ">
-                    ${item.percentage}%
+
+                    <div style="display:flex; align-items:center; gap:10px;">
+
+                        <span style="
+                            width:12px;
+                            height:12px;
+                            border-radius:50%;
+                            background:${palette[index % palette.length]};
+                            display:inline-block;
+                        "></span>
+
+                        <strong>#${index + 1}</strong>
+
+                        ${item.nombre}
+
+                    </div>
+
+                    <div style="
+                        color:#818cf8;
+                        font-weight:600;
+                    ">
+                        ${item.percentage}%
+                    </div>
+
                 </div>
 
-            </div>
-
-        `).join('');
+            `).join('');
+        }
 
         const ctx = document.getElementById(
             'analyticsChart'
         );
 
         if (window.analyticsChartInstance) {
-
             window.analyticsChartInstance.destroy();
         }
 
+        if (itemsWithPct.length === 0) return;
+
         window.analyticsChartInstance = new Chart(ctx, {
 
-            type: 'pie',
+            type: 'doughnut',
 
             data: {
 
@@ -601,16 +638,53 @@ async function renderAnalytics() {
                 datasets: [{
 
                     data: data,
+                    backgroundColor: labels.map(
+                        (_, i) => palette[i % palette.length]
+                    ),
+                    borderColor: 'rgba(255,255,255,0.05)',
+                    borderWidth: 2,
+                }],
+            },
 
-                    borderWidth: 1
-
-                }]
-            }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: '#fff',
+                            padding: 14,
+                            font: { size: 12 },
+                        },
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => {
+                                const v = ctx.parsed;
+                                const pct = grandTotal > 0
+                                    ? (v / grandTotal * 100).toFixed(1)
+                                    : 0;
+                                return `${ctx.label}: $${v.toLocaleString()} (${pct}%)`;
+                            },
+                        },
+                    },
+                },
+            },
         });
 
     } catch (error) {
 
-        console.error(error);
+        console.error("Error en renderAnalytics:", error);
+
+        const ranking = document.getElementById('analytics-ranking');
+        if (ranking) {
+            ranking.innerHTML = `
+                <p style="color:#EF4444;">
+                    Error cargando analítica. Verificá que el backend esté online.
+                </p>
+            `;
+        }
     }
 }
 
