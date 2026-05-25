@@ -711,10 +711,10 @@ async function reclassifyCategory(categoryId) {
     const motherCategoryId = select.value;
 
     try {
-
+        
         const response = await fetch(
 
-            `${API_BASE_URL}/reclassify-category/${categoryId}?mother_category_id=${motherCategoryId}`,
+            `${API_BASE_URL}/admin/reclassify-category/${categoryId}?mother_category_id=${motherCategoryId}`,
 
             {
                 method: 'PUT',
